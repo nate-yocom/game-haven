@@ -1,5 +1,6 @@
 # TBD
 - [ ] Minimal rpi engine and async renderer - launches, displays logo
+- [ ] Add optional resolution/bpp constructor args for AsyncFrameBufferDisplay?
 - [ ] Minimal 'app only' engine - is there a x-platform render mech that would let us do bmp->window for compat with fb?
 - [ ] Detect missing controller and show image
 - [ ] Add dedicated game-loop, pull controller events off a queue (have controller loop push to same)
@@ -21,6 +22,7 @@
 - [ ] Configure pi script:
 	- [ ] Add a lot of env checking, verify distribution, current user is root, etc etc
 	- [ ] Or maybe run as current user (so we can know who to chown to) and expect sudo to work?
+- [ ] AsyncFrameBufferDisplay should optionally use ioctl to get FB bit depth and resolution
 		
 # Refactor
 - [ ] ScaledRelativeMouse class - less Point/PointF construction, just pass around int/floats might be nicer on the stack?
