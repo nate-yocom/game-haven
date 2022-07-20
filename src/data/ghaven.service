@@ -1,0 +1,14 @@
+[Unit]
+Description=Game Haven Service
+
+[Service]
+Type=notify
+WorkingDirectory=/opt/ghaven
+ExecStart=/opt/ghaven/ghaven
+SyslogIdentifier=ghaven
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

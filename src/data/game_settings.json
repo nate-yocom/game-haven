@@ -1,0 +1,345 @@
+{        
+    "Games": [
+        {
+            "Name": "Generic Mouse",            
+            "Settings": {
+                "DefaultMode": "Mouse Controls - Large Steps",
+                "ControllerConfiguration": {
+                    "LongClickMinimumDurationMilliseconds": 700            
+                },
+                "ModeChangeButton": "View",
+                "DisplayFlipped": true,    
+                "Buttons": [
+                    {
+                        "XPadButton": "Menu",
+                        "KeyEvents": [
+                            {
+                                "Type": "KeyClick",
+                                "Values": [
+                                    "KEY_ESC"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "Modes": [  
+                    {
+                        "Name": "Mouse Controls - Large Steps",
+                        "DisplayText": [
+                            {
+                                "Text": " [ Menu ] -- ESC"
+                            },
+                            {
+                                "Text": " [ DPad ] -- Move Mouse"
+                            },
+                            {
+                                "Text": " [ (Hold) A / B ] -- Left Click / Right Click"
+                            },
+                            {
+                                "Text": " [ (Hold) X ] -- Double Left Click"
+                            },                            
+                            {
+                                "Text": " [ (Hold) Y ] -- Toggle Left Button (i.e. drag)"
+                            },               
+                            {
+                                "Text": " [ L ] -- Center Cursor"
+                            }
+                        ],
+                        "Buttons": [
+                            {
+                                "XPadButton": "DPadLeft",                    
+                                "MouseEvents": [ 
+                                    {                        
+                                        "Type": "Delta",
+                                        "Value": { "X": -1200, "Y": 0 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadRight",                    
+                                "MouseEvents": [
+                                    {                        
+                                        "Type": "Delta",
+                                        "Value": { "X": 1200, "Y": 0 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadUp",                    
+                                "MouseEvents": [
+                                    {
+                                        "Type": "Delta",
+                                        "Value": { "X": 0, "Y": -1200 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadDown",                    
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "Delta",
+                                        "Value": { "X": 0, "Y": 1200  }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "A",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "LeftClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "B",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "RightClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "X",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "DoubleClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "Y",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "ToggleLeft"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "L",                                
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "Center"                                        
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Mouse Controls - Small Steps",
+                        "DisplayText": [
+                            {
+                                "Text": " [ Menu ] -- ESC"
+                            },
+                            {
+                                "Text": " [ DPad ] -- Move Mouse"
+                            },
+                            {
+                                "Text": " [ (Hold) A / B ] -- Left Click / Right Click"
+                            },
+                            {
+                                "Text": " [ (Hold) X ] -- Double Left Click"
+                            },                            
+                            {
+                                "Text": " [ (Hold) Y ] -- Toggle Left Button (i.e. drag)"
+                            },               
+                            {
+                                "Text": " [ L ] -- Center Cursor"
+                            }
+                        ],
+                        "Buttons": [
+                            {
+                                "XPadButton": "DPadLeft",                    
+                                "MouseEvents": [ 
+                                    {                        
+                                        "Type": "Delta",
+                                        "Value": { "X": -250, "Y": 0 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadRight",                    
+                                "MouseEvents": [
+                                    {                        
+                                        "Type": "Delta",
+                                        "Value": { "X": 250, "Y": 0 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadUp",                    
+                                "MouseEvents": [
+                                    {
+                                        "Type": "Delta",
+                                        "Value": { "X": 0, "Y": -250 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadDown",                    
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "Delta",
+                                        "Value": { "X": 0, "Y": 250  }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "A",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "LeftClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "B",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "RightClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "X",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "DoubleClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "Y",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "ToggleLeft"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "L",                                
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "Center"                                        
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Mouse Controls - Scroll",
+                        "DisplayText": [
+                            {
+                                "Text": " [ Menu ] -- ESC"
+                            },
+                            {
+                                "Text": " [ DPad ] -- Scroll Vertical / Horizontal"
+                            },
+                            {
+                                "Text": " [ (Hold) A / B ] -- Left Click / Right Click"
+                            },
+                            {
+                                "Text": " [ (Hold) X ] -- Double Left Click"
+                            },                            
+                            {
+                                "Text": " [ (Hold) Y ] -- Toggle Left Button (i.e. drag)"
+                            },               
+                            {
+                                "Text": " [ L ] -- Center Cursor"
+                            }
+                        ],
+                        "Buttons": [
+                            {
+                                "XPadButton": "DPadLeft",                    
+                                "MouseEvents": [ 
+                                    {                        
+                                        "Type": "Scroll",
+                                        "Value": { "X": 10, "Y": 0 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadRight",                    
+                                "MouseEvents": [
+                                    {                        
+                                        "Type": "Scroll",
+                                        "Value": { "X": -10, "Y": 0 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadUp",                    
+                                "MouseEvents": [
+                                    {
+                                        "Type": "Scroll",
+                                        "Value": { "X": 0, "Y": 10 }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "DPadDown",                    
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "Scroll",
+                                        "Value": { "X": 0, "Y": -10  }
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "A",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "LeftClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "B",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "RightClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "X",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "DoubleClick"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "Y",
+                                "Type": "LongClick",
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "ToggleLeft"                                        
+                                    }
+                                ]
+                            },
+                            {
+                                "XPadButton": "L",                                
+                                "MouseEvents": [              
+                                    {                        
+                                        "Type": "Center"                                        
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
