@@ -26,6 +26,8 @@ namespace GameHaven.Engine {
         public void Initialize() {   
             _display = new AsyncFrameBufferDisplay();
             _display.Clear();
+
+            // Test image from: https://commons.wikimedia.org/wiki/File:Test.svg
             _display.DisplayImage("data/test-image.png");
         }
         
