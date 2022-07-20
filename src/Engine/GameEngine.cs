@@ -1,3 +1,4 @@
+using GameHaven.Engine.Renderer;
 using GameHaven.Engine.Diagnostics;
 
 namespace GameHaven.Engine {
@@ -6,7 +7,9 @@ namespace GameHaven.Engine {
 
         private readonly ILogger _logger;
         private readonly string _settingsFilePath;
-        private bool disposedValue;
+        private bool _disposed;
+
+        private AsyncFrameBufferDisplay? _display;
 
         // Cheater: Should register with injection controller as a singleton, but ... eh.      
         public static GameEngine? ThereCanBeOnlyOne { get; private set; }
@@ -17,19 +20,22 @@ namespace GameHaven.Engine {
         public GameEngine(string settingsFilePath) {
             _logger = Logging.GetLogger("GameEngine");
             _settingsFilePath = settingsFilePath;
-            ThereCanBeOnlyOne = this;
+            ThereCanBeOnlyOne = this;            
         }
 
-        public void Initialize() {           
+        public void Initialize() {   
+            _display = new AsyncFrameBufferDisplay();
+            _display.Clear();
+            _display.DisplayImage("data/test-image.png");
         }
         
         
         protected virtual void Dispose(bool disposing) {
-            if (!disposedValue) {
+            if (!_disposed) {
                 if (disposing) {
                 }
                 
-                disposedValue = true;
+                _disposed = true;
             }
         }
 
