@@ -19,7 +19,7 @@ namespace GameHaven {
                 
                 Logging.LoggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();            
                             
-                using(GameEngine engine = new GameEngine()) {
+                using(StateEngine engine = new StateEngine()) {
                     // Initialize display, controller, etc, enters default mode
                     engine.Initialize();
                     
