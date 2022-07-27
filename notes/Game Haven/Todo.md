@@ -4,7 +4,7 @@
 	- [ ] ensure input event loop and state event loops are seperate (clear input on state change)
 	- [ ] get splash screen and main menu states working
 	- [ ] Detect missing controller and show image state (state engine moves from current state to this state automagically, and back)
-- [ ] Use ioctl to get fb resolution, internal native 800x480, render layer should resize if/when necessary dynamically (at perf cost for now)
+- [x] Use ioctl to get fb resolution, internal native 800x480, render layer should resize if/when necessary dynamically (at perf cost for now)
 - [ ] Add non-infringing game images
 - [ ] Adaptive keyboard state
 	- [ ] Show quick-key/shortcuts (TBD) on LCD
