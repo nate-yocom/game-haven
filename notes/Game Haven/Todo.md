@@ -1,11 +1,12 @@
 # TBD
-- [ ] Minimal rpi engine and async renderer - launches, displays logo
-- [ ] Add optional resolution/bpp constructor args for AsyncFrameBufferDisplay?
-- [ ] Minimal 'app only' engine - is there a x-platform render mech that would let us do bmp->window for compat with fb?
-- [ ] Detect missing controller and show image
-- [ ] Add dedicated game-loop, pull controller events off a queue (have controller loop push to same)
+- [ ] Base state engine
+	- [ ] funnel input events to current state, facilitate 'move to state'/'next state'
+	- [ ] ensure input event loop and state event loops are seperate (clear input on state change)
+	- [ ] get splash screen and main menu states working
+	- [ ] Detect missing controller and show image state (state engine moves from current state to this state automagically, and back)
+- [x] Use ioctl to get fb resolution, internal native 800x480, render layer should resize if/when necessary dynamically (at perf cost for now)
 - [ ] Add non-infringing game images
-- [ ] Adaptive keyboard mode
+- [ ] Adaptive keyboard state
 	- [ ] Show quick-key/shortcuts (TBD) on LCD
 - [ ] Configuration:
 	- [ ] Calibration: Allow for hold-tapping a button N times, average, this becomes long-click value?
@@ -22,7 +23,6 @@
 - [ ] Configure pi script:
 	- [ ] Add a lot of env checking, verify distribution, current user is root, etc etc
 	- [ ] Or maybe run as current user (so we can know who to chown to) and expect sudo to work?
-- [ ] AsyncFrameBufferDisplay should optionally use ioctl to get FB bit depth and resolution
 		
 # Refactor
 - [ ] ScaledRelativeMouse class - less Point/PointF construction, just pass around int/floats might be nicer on the stack?

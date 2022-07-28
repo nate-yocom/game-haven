@@ -1,0 +1,21 @@
+{   
+    "Settings": {
+        "InitialState": "BootSplash",
+        "MainMenuButton": "View",
+        "MainMenuButtonLength": "3",
+        "DisplayDevice": "/dev/fb0",
+        "KeyboardDevice": "/dev/hidg0",
+        "MouseDevice": "/dev/hidg1"
+    },  
+    "States": [
+        {
+            "Name": "BootSplash",
+            "Type": "SplashImage",
+            "Options": {
+                "ShowTime": "2",
+                "ShowImage": "data/bootsplash.png",
+                "NextState": "MainMenu"
+            }
+        }
+    ]
+}
