@@ -247,5 +247,4 @@ namespace GameHaven.Engine.Controller {
             GC.SuppressFinalize(this);
         }
     }
-
 }
