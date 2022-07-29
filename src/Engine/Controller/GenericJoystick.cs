@@ -93,6 +93,10 @@ namespace GameHaven.Engine.Controller
         private void ProcessMessages(CancellationToken token) {            
             while (!token.IsCancellationRequested) {
                 try {
+                    if (_identifier == null) {
+                        ProbeJoystick();
+                    }
+
                     ProcessDeviceFile(token);
                 } catch (Exception ex) {
                     if (!File.Exists(_deviceFile) && LogUnplugged) {
@@ -162,14 +166,20 @@ namespace GameHaven.Engine.Controller
         private const uint JSIOCGNAME_128 = 0x80806A13;  // JSIOCGNAME(len = 128)
 
         private void ProbeJoystick() {
-            using(var fileHandle = File.OpenHandle(_deviceFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None, FileOptions.None, 0)) {
-                byte[] name = new byte[128];
-                if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), JSIOCGNAME_128, name) < 0) {
-                    _logger.LogError($"ProbeJoystick ioctl({JSIOCGNAME_128}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
-                } else {
-                    _identifier = System.Text.ASCIIEncoding.ASCII.GetString(name).TrimEnd(new char[] { '\r', '\n', ' ', '\0' });
-                    _logger.LogInformation($"Joystick at {_deviceFile} => {_identifier}");
+            try {
+                if (File.Exists(_deviceFile)) {
+                    using(var fileHandle = File.OpenHandle(_deviceFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None, FileOptions.None, 0)) {
+                        byte[] name = new byte[128];
+                        if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), JSIOCGNAME_128, name) < 0) {
+                            _logger.LogError($"ProbeJoystick ioctl({JSIOCGNAME_128}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
+                        } else {
+                            _identifier = System.Text.ASCIIEncoding.ASCII.GetString(name).TrimEnd(new char[] { '\r', '\n', ' ', '\0' });
+                            _logger.LogInformation($"Joystick at {_deviceFile} => {_identifier}");
+                        }
+                    }
                 }
+            } catch(Exception ex) {
+                _logger.LogError($"Unable to probe {_deviceFile}: {ex.Message}");
             }
         }
 
