@@ -27,7 +27,7 @@ namespace GameHaven.Engine {
             _logger = Logging.GetLogger("StateEngine");
             _settingsFilePath = settingsFilePath;
             
-            Display = new AsyncFrameBufferDisplay();
+            Display = AsyncFrameBufferDisplay.CreateDisplay();
             Display.Clear();
         }
 

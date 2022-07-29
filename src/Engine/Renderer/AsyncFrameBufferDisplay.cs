@@ -10,22 +10,17 @@ using System.Runtime.InteropServices;
 using GameHaven.Engine.Diagnostics;
 
 namespace GameHaven.Engine.Renderer {
-
-    /**
-       Note: For now this class encapsulates everything for writing to /dev/fb*, and presumes
-                that the display is set to 16bpp 5/6/5 (RGB) mode and 800x480 resolution. 
-     **/
     public class AsyncFrameBufferDisplay : IDisposable {
         private ILogger _logger;
 
-        private readonly int _width = 800;
-        private readonly int _height = 480;
-        private readonly int _bpp = 16;  // RBG565
+        private readonly int _renderWidth = 800;
+        private readonly int _renderHeight = 480;
+        private readonly int _renderBpp = 16;  // RBG565
         private readonly string _fbDevice = "/dev/fb0";
 
-        private int _actualWidth = 0;
-        private int _actualHeight = 0;
-        private int _actualBpp = 0;
+        private int _displayWidth = 0;
+        private int _displayHeight = 0;
+        private int _displayBpp = 0;
         private string _displayName = "<unknown>";
 
         private MemoryMappedFile? _fbMmFile = null;
@@ -40,16 +35,39 @@ namespace GameHaven.Engine.Renderer {
         protected bool _disposed = false;
 
         private long _lastFrameTime = 0;
+
+        private const string DEFAULT_DISPLAY_DEVICE = "/dev/fb0";
+
+        // Enumerates /dev/fb* and returns a display for the highest numbered display
+        //  on the presumption that that is the correct one... could be config'd later
+        //  etc perhaps? Throws if no fb's found
+        public static AsyncFrameBufferDisplay CreateDisplay() {
+            ILogger logger = Logging.GetLogger($"AsyncFrameBufferDisplay::CreateDisplay");
+            string? firstFb = Directory.EnumerateFiles("/dev/", "fb?").OrderByDescending(x => x).FirstOrDefault();
+            if (firstFb == null) {
+                logger.LogError("/dev/fb? is empty?");
+                throw new Exception("Unable to locate a framebuffer device in /dev/fb?");
+            }
+
+            logger.LogInformation($"Using framebuffer device at: {firstFb}");
+            return new AsyncFrameBufferDisplay(firstFb);
+        }
         
-        public AsyncFrameBufferDisplay() {            
-            _logger = Logging.GetLogger("AsyncFrameBufferDisplay");
-            _renderLoopTask = Task.Factory.StartNew(() => RenderLoop(), TaskCreationOptions.LongRunning);
+        public AsyncFrameBufferDisplay() : this(DEFAULT_DISPLAY_DEVICE) {
+        }
+
+        public AsyncFrameBufferDisplay(string device) {
+            _fbDevice = device;
+            _logger = Logging.GetLogger($"AsyncFrameBufferDisplay({_fbDevice})");
+
+            // Should this go to an Initialize() so caller controls timing?
             ProbeFramebuffer();
+            _renderLoopTask = Task.Factory.StartNew(() => RenderLoop(), TaskCreationOptions.LongRunning);
         }
 
         public void Clear() {
             _logger.LogDebug("Clear()!");
-            using(Image<Bgr565> image = new Image<Bgr565>(_width, _height, new Bgr565(1,1,1))) {
+            using(Image<Bgr565> image = new Image<Bgr565>(_displayWidth, _displayHeight, new Bgr565(1,1,1))) {
                 DisplayImage(image);
             }        
         }
@@ -72,14 +90,14 @@ namespace GameHaven.Engine.Renderer {
         }       
 
         private void DisplayImage(Image<Bgr565> image) {
-            if (image.Width != _actualWidth || image.Height != _actualHeight) {
+            if (image.Width != _displayWidth || image.Height != _displayHeight) {
                 image.Mutate(x =>
                 {
-                    x.Resize(_actualWidth, _actualHeight);
+                    x.Resize(_displayWidth, _displayHeight);
                 });
             }
 
-            byte[] pixelBytes = new byte[image.Width * image.Height * (_bpp / 8)];
+            byte[] pixelBytes = new byte[image.Width * image.Height * (_renderBpp / 8)];
             image.CopyPixelDataTo(pixelBytes);
             lock(_mutex) {
                 // Last one in wins
@@ -90,7 +108,7 @@ namespace GameHaven.Engine.Renderer {
         private bool EnsureOpenStream() {
             try {
                 if (_fbMmFile == null) {        
-                    _fbMmFile = MemoryMappedFile.CreateFromFile(_fbDevice, FileMode.Open, null, (_width * _height * (_bpp / 8)));
+                    _fbMmFile = MemoryMappedFile.CreateFromFile(_fbDevice, FileMode.Open, null, (_displayWidth * _displayHeight * (_displayBpp / 8)));
                     _fbStream = _fbMmFile.CreateViewStream();
                 }
 
@@ -183,26 +201,24 @@ namespace GameHaven.Engine.Renderer {
         private const int FBIOGET_VSCREENINFO = 0x4600;
                 
         private void ProbeFramebuffer() {            
-            using(MemoryMappedFile file = MemoryMappedFile.CreateFromFile(_fbDevice, FileMode.Open, null, (_width * _height * (_bpp / 8)))) {
-                MemoryMappedViewStream stream = file.CreateViewStream();
-
+            using(var fileHandle = File.OpenHandle(_fbDevice, FileMode.Open, FileAccess.ReadWrite, FileShare.None, FileOptions.None, 0)) {
                 fb_fix_screeninfo fixed_info = new fb_fix_screeninfo();
                 fb_var_screeninfo variable_info = new fb_var_screeninfo();
 
-                if(ioctl(file.SafeMemoryMappedFileHandle.DangerousGetHandle().ToInt32(), FBIOGET_FSCREENINFO, ref fixed_info) < 0) {                                                        
+                if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), FBIOGET_FSCREENINFO, ref fixed_info) < 0) {
                     _logger.LogError($"ProbeFrameBuffer ioctl({FBIOGET_FSCREENINFO}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
                 } else {
                     _displayName = System.Text.ASCIIEncoding.ASCII.GetString(fixed_info.id).TrimEnd(new char[] { '\r', '\n', ' ', '\0' });                    
                     _logger.LogDebug($"Display memory for {_displayName} starts at: {fixed_info.smem_start} length: {fixed_info.smem_len}");
                 }
 
-                if(ioctl(file.SafeMemoryMappedFileHandle.DangerousGetHandle().ToInt32(), FBIOGET_VSCREENINFO, ref variable_info) < 0) {                                    
+                if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), FBIOGET_VSCREENINFO, ref variable_info) < 0) {
                     _logger.LogError($"ProbeFrameBuffer ioctl({FBIOGET_VSCREENINFO}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
                 } else {
                     _logger.LogDebug($"Actual width => {variable_info.xres} height => {variable_info.yres} bpp => {variable_info.bits_per_pixel}");
-                    _actualBpp = variable_info.bits_per_pixel;
-                    _actualWidth = variable_info.xres;
-                    _actualHeight = variable_info.yres;
+                    _displayBpp = variable_info.bits_per_pixel;
+                    _displayWidth = variable_info.xres;
+                    _displayHeight = variable_info.yres;
                 }       
             }                     
         }
