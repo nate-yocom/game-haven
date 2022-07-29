@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+
 using Microsoft.Extensions.Logging;
+
 using GameHaven.Engine.Diagnostics;
+
 
 // Many nods and thanks to https://github.com/nahueltaibo/gamepad
 namespace GameHaven.Engine.Controller
@@ -35,6 +39,7 @@ namespace GameHaven.Engine.Controller
 
         private bool _disposedValue;
         private readonly string _deviceFile;
+        private string? _identifier;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
         private Dictionary<byte, bool> _buttons = new Dictionary<byte, bool>();
@@ -60,17 +65,24 @@ namespace GameHaven.Engine.Controller
 
         public bool Available { get { return File.Exists(_deviceFile); } }
 
+        public string Identifier { get { return _identifier != null ? _identifier : _deviceFile; } }
+
+        public string Device { get { return _deviceFile; } }
+
+        public bool LogUnplugged { get; set; } = false;
+
         public GenericJoystick() : this("/dev/input/js0") {}
 
         public GenericJoystick(string deviceFile)
         {
             _logger = Logging.GetLogger($"GenericJoystick[{deviceFile}]");
-            
             _deviceFile = deviceFile;
+
+            // Get device name (if able)
+            ProbeJoystick();
 
             // Create the Task that will constantly read the device file, process its bytes and fire events accordingly
             _cancellationTokenSource = new CancellationTokenSource();
-
             Task.Factory.StartNew(() => ProcessMessages(_cancellationTokenSource.Token));
         }
 
@@ -83,7 +95,9 @@ namespace GameHaven.Engine.Controller
                 try {
                     ProcessDeviceFile(token);
                 } catch (Exception ex) {
-                    _logger.LogWarning($"{ex.Message} while trying to read messages from {_deviceFile} - unplugged?");
+                    if (!File.Exists(_deviceFile) && LogUnplugged) {
+                        _logger.LogWarning($"{ex.Message} while trying to read messages from {_deviceFile} - unplugged?");
+                    }
                     Thread.Sleep(RetryDeviceFileInterval);
                 }
             }                        
@@ -104,8 +118,7 @@ namespace GameHaven.Engine.Controller
             }
         }
 
-        private void ProcessConfiguration(byte[] message)
-        {
+        private void ProcessConfiguration(byte[] message) {
             if(HasFlag(message[MESSAGE_FLAG_INDEX], MessageFlags.Button)) {
                 byte key = message[ADDRESS_INDEX];
                 if (!_buttons.ContainsKey(key)) {
@@ -119,8 +132,7 @@ namespace GameHaven.Engine.Controller
             }
         }
 
-        private void ProcessValues(byte[] message)
-        {
+        private void ProcessValues(byte[] message) {
             if(HasFlag(message[MESSAGE_FLAG_INDEX], MessageFlags.Button)) {
                 var oldValue = _buttons[message[ADDRESS_INDEX]];
                 var newValue = message[PRESSED_FLAG_INDEX] == 0x01;
@@ -142,12 +154,28 @@ namespace GameHaven.Engine.Controller
             }
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {                    
+        [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
+        private static extern int ioctl(int handle, uint request, byte[] output);
+
+        [DllImport("libc", EntryPoint = "__errno_location")]
+        private static extern System.IntPtr __errno_location();
+        private const uint JSIOCGNAME_128 = 0x80806A13;  // JSIOCGNAME(len = 128)
+
+        private void ProbeJoystick() {
+            using(var fileHandle = File.OpenHandle(_deviceFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None, FileOptions.None, 0)) {
+                byte[] name = new byte[128];
+                if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), JSIOCGNAME_128, name) < 0) {
+                    _logger.LogError($"ProbeJoystick ioctl({JSIOCGNAME_128}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
+                } else {
+                    _identifier = System.Text.ASCIIEncoding.ASCII.GetString(name).TrimEnd(new char[] { '\r', '\n', ' ', '\0' });
+                    _logger.LogInformation($"Joystick at {_deviceFile} => {_identifier}");
+                }
+            }
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (!_disposedValue) {
+                if (disposing) {
                     _cancellationTokenSource.Cancel();
                 }
                 
@@ -155,8 +183,7 @@ namespace GameHaven.Engine.Controller
             }
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
