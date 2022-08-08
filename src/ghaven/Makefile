@@ -18,7 +18,7 @@ build:
 	mkdir -p $(OUTPUT)
 	mkdir -p $(OUTPUT)/data
 	mkdir -p $(OUTPUT)/data/fonts
-	dotnet publish --self-contained --output $(OUTPUT) --arch $(ARCH) --os $(OS)
+	dotnet publish --self-contained -p:PublishSingleFile=true --output $(OUTPUT) --arch $(ARCH) --os $(OS)
 	cp -Rf ../../data/images/rendered/ $(OUTPUT)/data/
 	cp -f data/* $(OUTPUT)/data/
 	cp -Rf ../../data/fonts/* $(OUTPUT)/data/fonts/
