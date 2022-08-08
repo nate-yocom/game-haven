@@ -7,11 +7,11 @@ using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
 
-using GameHaven.Engine.Diagnostics;
+using GameHaven.Diagnostics;
 
 
 // Many nods and thanks to https://github.com/nahueltaibo/gamepad
-namespace GameHaven.Engine.Controller
+namespace GameHaven.Controller
 {    
     public class GenericJoystick : IDisposable {
         public class AxisEventArgs {

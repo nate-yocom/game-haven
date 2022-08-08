@@ -2,7 +2,7 @@
  * USB HID Keyboard scan codes as per USB spec 1.11 
  */
 
-namespace GameHaven.Engine.Hid.Keyboard {
+namespace GameHaven.Hid.Keyboard {
 
     /**
     * Modifier masks - used for the first byte in the HID report.

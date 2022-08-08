@@ -1,4 +1,4 @@
-namespace GameHaven.Engine.Controller {
+namespace GameHaven.Controller {
     [Flags]
     public enum ButtonEventTypes 
     {

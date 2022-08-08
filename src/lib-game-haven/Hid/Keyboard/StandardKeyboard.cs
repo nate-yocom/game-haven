@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 
-using GameHaven.Engine.Diagnostics;
+using GameHaven.Diagnostics;
 
-namespace GameHaven.Engine.Hid.Keyboard {
+namespace GameHaven.Hid.Keyboard {
 
     public class StandardKeyboard {        
         private readonly string _devicePath;

@@ -1,6 +1,6 @@
-using GameHaven.Engine.Controller;
+using GameHaven.Controller;
 
-namespace GameHaven.Engine.States {
+namespace GameHaven.States {
 
     public abstract class BaseState {
         private StateEngine _engine;

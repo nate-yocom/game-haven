@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace GameHaven.Engine.Diagnostics {
+namespace GameHaven.Diagnostics {
     public static class Logging {
         public static ILoggerFactory LoggerFactory { get; set; } = new LoggerFactory();
 

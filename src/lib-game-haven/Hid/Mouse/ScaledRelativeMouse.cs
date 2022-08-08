@@ -1,9 +1,9 @@
 using System.Drawing;
 using Microsoft.Extensions.Logging;
 
-using GameHaven.Engine.Diagnostics;
+using GameHaven.Diagnostics;
 
-namespace GameHaven.Engine.Hid.Mouse {
+namespace GameHaven.Hid.Mouse {
 
     public class ScaledRelativeMouse {
         public const int MAX_X = 32767;
