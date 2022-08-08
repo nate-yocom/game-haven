@@ -1,10 +1,10 @@
-using GameHaven.Engine.Diagnostics;
+using GameHaven.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
 using System.Diagnostics;
 
-namespace GameHaven.Engine.Controller {
+namespace GameHaven.Controller {
 
     // Wraps a Gamepad with constants for buttons/sticks as well as support for 
     //  short/long click etc.

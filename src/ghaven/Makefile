@@ -1,7 +1,7 @@
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
-TARGET ?= ghaven
+TARGET ?= $(current_dir)
 BIN ?= bin
 OUTPUT ?= $(BIN)/$(TARGET)/
 ARCH ?= arm
@@ -19,9 +19,9 @@ build:
 	mkdir -p $(OUTPUT)/data
 	mkdir -p $(OUTPUT)/data/fonts
 	dotnet publish --self-contained --output $(OUTPUT) --arch $(ARCH) --os $(OS)
-	cp -Rf ../data/images/rendered/ $(OUTPUT)/data/
+	cp -Rf ../../data/images/rendered/ $(OUTPUT)/data/
 	cp -f data/* $(OUTPUT)/data/
-	cp -Rf ../data/fonts/* $(OUTPUT)/data/fonts/
+	cp -Rf ../../data/fonts/* $(OUTPUT)/data/fonts/
 
 push: build
 	rsync -a -e "ssh -p ${PUSH_PORT}" $(OUTPUT) ${PUSH_USER}@${PUSH_HOST}:/opt/ghaven

@@ -1,8 +1,10 @@
-using GameHaven.Engine.Renderer;
-using GameHaven.Engine.Diagnostics;
-using GameHaven.Engine.Controller;
+using Microsoft.Extensions.Logging;
 
-namespace GameHaven.Engine {
+using GameHaven.Renderer;
+using GameHaven.Diagnostics;
+using GameHaven.Controller;
+
+namespace GameHaven.States {
 
     /**
         Our job is to:

@@ -3,13 +3,15 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
 
+using Microsoft.Extensions.Logging;
+
 using System.IO.MemoryMappedFiles;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-using GameHaven.Engine.Diagnostics;
+using GameHaven.Diagnostics;
 
-namespace GameHaven.Engine.Renderer {
+namespace GameHaven.Renderer {
     public class AsyncFrameBufferDisplay : IDisposable {
         private ILogger _logger;
 

@@ -1,5 +1,6 @@
-using GameHaven.Engine;
-using GameHaven.Engine.Diagnostics;
+using GameHaven;
+using GameHaven.States;
+using GameHaven.Diagnostics;
 
 namespace GameHaven {    
     public class GameHavenWorker : BackgroundService

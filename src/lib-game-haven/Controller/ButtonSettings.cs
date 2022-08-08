@@ -1,4 +1,4 @@
-namespace GameHaven.Engine.Controller {
+namespace GameHaven.Controller {
     public class ButtonSettings {
 
         // How often should the hold event fire (at most, no garauntee of absolute rate)

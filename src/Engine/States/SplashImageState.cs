@@ -1,4 +1,0 @@
-namespace GameHaven.Engine.States {
-
-    
-}
