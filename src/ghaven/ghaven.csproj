@@ -15,7 +15,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\lib-game-haven\lib-gamehaven.csproj" />
+    <ProjectReference Include="..\lib-game-haven\lib-gamehaven.csproj" />    
   </ItemGroup>
-  
+
 </Project>

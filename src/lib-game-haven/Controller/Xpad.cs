@@ -4,13 +4,15 @@ using Microsoft.Extensions.Logging;
 
 using System.Diagnostics;
 
+using Nfw.Linux.Joystick.Generic;
+
 namespace GameHaven.Controller {
 
     // Wraps a Gamepad with constants for buttons/sticks as well as support for 
     //  short/long click etc.
     public class Xpad : IDisposable
     {        
-        public bool Available { get { return _gamepad.Available; } }
+        public bool Available { get { return _gamepad.Connected; } }
                             
         public enum Button {
             A       = 0x00,
@@ -53,7 +55,7 @@ namespace GameHaven.Controller {
         private const short AXIS_POSITIVE_MAX = 32767;
 
         private bool _disposedValue;        
-        private GenericJoystick _gamepad;
+        private Joystick _gamepad;
         
         // Args: Button, Event, and Duration
         private readonly Action<Button, ButtonEventTypes, double>? _buttonAction;
@@ -82,10 +84,10 @@ namespace GameHaven.Controller {
             _buttonAction = callback;
             _subscribedEvents = ButtonEventTypes.All;
             _stopwatch.Start();
-            _gamepad = new GenericJoystick(_deviceFile);
-            _gamepad.CallbacksForAllEvents = true;
-            _gamepad.ButtonChanged += ButtonChangeCallback;
-            _gamepad.AxisChanged += AxisChangeCallback;
+            _gamepad = new Joystick(_deviceFile);
+            _gamepad.CallbackForAllEvents = true;
+            _gamepad.ButtonCallback = ButtonChangeCallback;
+            _gamepad.AxisCallback = AxisChangeCallback;
         }
 
         public Xpad(string deviceFile, ButtonEventTypes subscribeTypes, Action<Button, ButtonEventTypes, double> callback) : this(deviceFile, callback) {
@@ -114,8 +116,8 @@ namespace GameHaven.Controller {
             return (_subscribedEvents & buttonEvent) != ButtonEventTypes.None;
         }
   
-        private void ButtonChangeCallback(object? sender, GenericJoystick.ButtonEventArgs args) {            
-            ButtonChangeHandler((Button) args.Button, args.Pressed);
+        private void ButtonChangeCallback(Joystick sender, byte button, bool pressed) {  
+            ButtonChangeHandler((Button) button, pressed);
         }
 
         private void ButtonChangeHandler(Button button, bool pressed) {            
@@ -185,45 +187,45 @@ namespace GameHaven.Controller {
             return Button.StartSyntheticButtons;
         } 
 
-        private void AxisChangeCallback(object? sender, GenericJoystick.AxisEventArgs args) {
+        private void AxisChangeCallback(Joystick sender, byte axisId, short value) {
             // For now, we just translate based on which axis it is.  Dpad we use < 0 for Left and Up, every other axis is either 
             //  -32k for Release, and 32k for press
-            Axis axis = (Axis) args.Axis;            
+            Axis axis = (Axis) axisId;            
             switch(axis) {
                 case Axis.X1:   // and X2, same value
                 case Axis.LT:
                 case Axis.RT:
                     {
-                        Button button = ButtonFromAxisAndDirection(axis, args.Value);
-                        if (args.Value == AXIS_NEGATIVE_MAX) {
+                        Button button = ButtonFromAxisAndDirection(axis, value);
+                        if (value == AXIS_NEGATIVE_MAX) {
                             ButtonChangeHandler(button, false);
-                        } else if (args.Value == AXIS_POSITIVE_MAX) { 
+                        } else if (value == AXIS_POSITIVE_MAX) { 
                             ButtonChangeHandler(button, true);                            
                         }
                     }
                     break;
                 case Axis.DPadLeftRight:
-                    if (args.Value == 0) {
+                    if (value == 0) {
                         // This is a release of the Left AND Right, so generate both, handler must remove dupes if useful
                         ButtonChangeHandler(Button.DPadLeft, false);
                         ButtonChangeHandler(Button.DPadRight, false);                        
-                    } else if (args.Value == AXIS_NEGATIVE_MAX) {
+                    } else if (value == AXIS_NEGATIVE_MAX) {
                         // This is a press of the Left
                         ButtonChangeHandler(Button.DPadLeft, true);
-                    } else if (args.Value == AXIS_POSITIVE_MAX) {
+                    } else if (value == AXIS_POSITIVE_MAX) {
                         // This is a press of the Right
                         ButtonChangeHandler(Button.DPadRight, true);
                     }
                     break;
                 case Axis.DPadUpDown:                    
-                    if (args.Value == 0) {
+                    if (value == 0) {
                         // This is a release of the Up AND Down, so generate both, handler must remove dupes if useful
                         ButtonChangeHandler(Button.DPadUp, false);
                         ButtonChangeHandler(Button.DPadDown, false);                        
-                    } else if (args.Value == AXIS_NEGATIVE_MAX) {
+                    } else if (value == AXIS_NEGATIVE_MAX) {
                         // This is a press of the Up
                         ButtonChangeHandler(Button.DPadUp, true);
-                    } else if (args.Value == AXIS_POSITIVE_MAX) {
+                    } else if (value == AXIS_POSITIVE_MAX) {
                         // This is a press of the Down
                         ButtonChangeHandler(Button.DPadDown, true);
                     }
