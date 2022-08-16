@@ -9,15 +9,14 @@ namespace Nfw.Linux.Joystick.Simple {
         public Action<Joystick, byte, short>? AxisCallback;
         public Action<Joystick, bool>? ConnectedCallback;
         
-        private bool _disposedValue = false;
+        private bool _disposedValue = false;        
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();        
+        private readonly string _deviceFile;
         private Dictionary<byte, bool> _buttons = new Dictionary<byte, bool>();
         private Dictionary<byte, short> _axis = new Dictionary<byte, short>();
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();        
-        private readonly string _deviceFile;        
         
         protected ILogger? _logger;
-
-        protected const string DEFAULT_DEVICE = "/dev/input/js0";
+        protected const string DEFAULT_DEVICE = "/dev/input/js0";        
 
         public TimeSpan RetryDeviceInterval { get; set; } = TimeSpan.FromSeconds(1);
         public bool Connected { get; private set; } = false;
@@ -48,6 +47,22 @@ namespace Nfw.Linux.Joystick.Simple {
             return _axis[axis];
         }
 
+        protected void InitButton(byte button, bool value) {
+            _buttons[button] = value;
+        }
+
+        protected void SetButtonValue(byte button, bool value) {
+            _buttons[button] = value;
+        }
+
+        protected void InitAxis(byte axis, short value) {
+            _axis[axis] = value;
+        }
+
+        protected bool KnownButton(byte button) {
+            return _buttons.ContainsKey(button);
+        }
+
         private void RunningLoop(CancellationToken token) {
             while (!token.IsCancellationRequested) {
                 try {
@@ -64,7 +79,7 @@ namespace Nfw.Linux.Joystick.Simple {
                             Thread.Sleep(RetryDeviceInterval);
                         }
                     }
-                } catch (Exception ex) {
+                } catch (Exception ex) {                    
                     _logger?.LogError($"Unexpected error in reading from {_deviceFile}: {ex.Message}");
                     Connected = false;
                     InvokeConnectedCallback(Connected);
@@ -90,17 +105,9 @@ namespace Nfw.Linux.Joystick.Simple {
         private void ProcessConfiguration(byte[] message) {
             byte key = message.Id();
             if (message.IsButton()) {                
-                if (!_buttons.ContainsKey(key)) {
-                    _buttons.Add(key, false);                    
-                } else {
-                    _buttons[key] = false;
-                }
+                InitButton(key, false);
             } else if (message.IsAxis()) {
-                if (!_axis.ContainsKey(key)) {
-                    _axis.Add(key, 0);
-                } else {
-                    _axis[key] = 0;
-                }
+                InitAxis(key, 0);
             }
         }
 
@@ -174,6 +181,9 @@ namespace Nfw.Linux.Joystick.Simple {
         protected virtual void Dispose(bool disposing) {
             if (!_disposedValue) {
                 if (disposing) {
+                    ButtonCallback = null;
+                    AxisCallback = null;
+                    ConnectedCallback = null;
                     _cancellationTokenSource.Cancel();
                 }
                 

@@ -8,14 +8,15 @@ namespace Nfw.Linux.Joystick.Smart {
     
     public class Joystick : Nfw.Linux.Joystick.Simple.Joystick {
         // this, ID, EventType, Value, Duration Since Last
-        public Action<Joystick, byte, ButtonEventTypes, bool, TimeSpan>? SmartButtonCallback;
+        public new Action<Joystick, byte, ButtonEventTypes, bool, TimeSpan>? ButtonCallback;
         // this, ID, Value, Duration Since Last
-        public Action<Joystick, byte, short, TimeSpan>? SmartAxisCallback;
+        public new Action<Joystick, byte, short, TimeSpan>? AxisCallback;
         // Settings used for timing in the absence of a button-specific setting
         public ButtonSettings DefaultButtonSettings { get; set; } = new ButtonSettings();                           
         public ButtonEventTypes SubscribedEvents { get; set; } = ButtonEventTypes.All;
 
 
+        private bool _disposedValue = false;
         private Stopwatch _stopwatch = new Stopwatch();
         private Dictionary<byte, TimeSpan> _buttonState = new Dictionary<byte, TimeSpan>();
         private Dictionary<byte, TimeSpan> _axisState = new Dictionary<byte, TimeSpan>();
@@ -68,10 +69,6 @@ namespace Nfw.Linux.Joystick.Smart {
         }
   
         protected virtual void ButtonChangeCallback(byte button, bool pressed) {
-            // If we dont have a callback, no need to think harder
-            if (SmartButtonCallback == null)
-                return;            
-
             // If the button isnt known yet, we add it - and ignore the event (always ignore init basically)
             if (!_buttonState.ContainsKey(button)) {                
                 _buttonState[button] = _stopwatch.Elapsed;
@@ -113,11 +110,7 @@ namespace Nfw.Linux.Joystick.Smart {
             }
         }
         
-        protected virtual void AxisChangeCallback(byte axis, short value) {
-            // If we dont have a callback, no need to think harder
-            if (SmartAxisCallback == null)
-                return;
-
+        protected virtual void AxisChangeCallback(byte axis, short value) {            
             // If the axis isnt known yet, we add it - and ignore the event (always ignore init basically)
             if (!_axisState.ContainsKey(axis)) {
                 _axisState[axis] = _stopwatch.Elapsed;
@@ -139,21 +132,30 @@ namespace Nfw.Linux.Joystick.Smart {
         }
 
         protected virtual void InvokeSmartButtonCallback(byte key, ButtonEventTypes eventType, bool pressed, TimeSpan elapsed) {
-            SmartButtonCallback?.Invoke(this, key, eventType, pressed, elapsed);
+            ButtonCallback?.Invoke(this, key, eventType, pressed, elapsed);
         }
 
         protected virtual void InvokeSmartAxisCallback(byte axis, short value, TimeSpan elapsed) {
-            SmartAxisCallback?.Invoke(this, axis, value, elapsed);
+            AxisCallback?.Invoke(this, axis, value, elapsed);
         }
 
-        protected override void InvokeButtonCallback(byte key, bool value) {
-            base.InvokeButtonCallback(key, value);
+        protected override void InvokeButtonCallback(byte key, bool value) {            
             ButtonChangeCallback(key, value);
         }
 
-        protected override void InvokeAxisCallback(byte key, short value) {
-            base.InvokeAxisCallback(key, value);
+        protected override void InvokeAxisCallback(byte key, short value) {            
             AxisChangeCallback(key, value);
-        }                
+        }
+
+        protected override void Dispose(bool disposing) {
+            if (!_disposedValue) {
+                if (disposing) {
+                    ButtonCallback = null;
+                    AxisCallback = null;                    
+                }
+                
+                _disposedValue = true;
+            }
+        }
     }
 }
