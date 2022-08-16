@@ -2,29 +2,18 @@
 using Nfw.Linux.Joystick.Smart;
 
 XboxGamepad joystick = new XboxGamepad("/dev/input/js0", ButtonEventTypes.All);
-
-joystick.AxisCallback = (j, e, d) => {
-    Console.WriteLine($"{j.DeviceName} => Simple Axis[{e}, {d}]");
+joystick.TreatAxisAsButtons = true;
+joystick.DefaultButtonSettings = new ButtonSettings() {
+    LongClickMinimumDurationMilliseconds = 500,
+    ShortClickMinimumDurationMilliseconds = 15
 };
 
-joystick.ButtonCallback = (j, e, d) => {
-    Console.WriteLine($"{j.DeviceName} => Simple Button[{e}, {d}]");
+joystick.ButtonCallback = (j, b, e, v, d) => {
+    Console.WriteLine($"{j.DeviceName} => Button[{b}, {e}] => {v} [dTime: {d}]");
 };
 
-joystick.SmartButtonCallback = (j, b, e, v, d) => {
-    Console.WriteLine($"{j.DeviceName} => Smart Button[{b}, {e}] => {v} [dTime: {d}]");
-};
-
-joystick.SmartAxisCallback = (j, a, v, d) => {
-    Console.WriteLine($"{j.DeviceName} => Smart Axis[{a}] => {v} [dTime: {d}]");
-};
-
-joystick.XboxButtonCallback = (j, b, e, v, d) => {
-    Console.WriteLine($"{j.DeviceName} => XBox Button[{b}, {e}] => {v} [dTime: {d}]");
-};
-
-joystick.XboxAxisCallback = (j, a, v, d) => {
-    Console.WriteLine($"{j.DeviceName} => XBox Axis[{a}] => {v} [dTime: {d}]");
+joystick.AxisCallback = (j, a, v, d) => {
+    Console.WriteLine($"{j.DeviceName} => Axis[{a}] => {v} [dTime: {d}]");
 };
 
 joystick.ConnectedCallback = (j, c) => {
