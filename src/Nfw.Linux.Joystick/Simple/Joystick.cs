@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Nfw.Linux.Joystick.Generic {
+namespace Nfw.Linux.Joystick.Simple {
 
     public class Joystick : IDisposable {
         public Action<Joystick, byte, bool>? ButtonCallback;
@@ -12,10 +12,12 @@ namespace Nfw.Linux.Joystick.Generic {
         private bool _disposedValue = false;
         private Dictionary<byte, bool> _buttons = new Dictionary<byte, bool>();
         private Dictionary<byte, short> _axis = new Dictionary<byte, short>();
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private ILogger? _logger;
-        private readonly string _deviceFile;
-        private const string DEFAULT_DEVICE = "/dev/input/js0";
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();        
+        private readonly string _deviceFile;        
+        
+        protected ILogger? _logger;
+
+        protected const string DEFAULT_DEVICE = "/dev/input/js0";
 
         public TimeSpan RetryDeviceInterval { get; set; } = TimeSpan.FromSeconds(1);
         public bool Connected { get; private set; } = false;
@@ -38,7 +40,7 @@ namespace Nfw.Linux.Joystick.Generic {
         public Joystick() : this(DEFAULT_DEVICE, null) {            
         }
 
-        public bool ButtonState(byte button) {
+        public bool ButtonValue(byte button) {
             return _buttons[button];
         }
 
@@ -57,7 +59,7 @@ namespace Nfw.Linux.Joystick.Generic {
                         if (DeviceFileExists) {
                             DeviceName = ProbeForName();
                             Connected = true;
-                            ConnectedCallback?.Invoke(this, Connected);
+                            InvokeConnectedCallback(Connected);                            
                         } else {
                             Thread.Sleep(RetryDeviceInterval);
                         }
@@ -65,7 +67,7 @@ namespace Nfw.Linux.Joystick.Generic {
                 } catch (Exception ex) {
                     _logger?.LogError($"Unexpected error in reading from {_deviceFile}: {ex.Message}");
                     Connected = false;
-                    ConnectedCallback?.Invoke(this, Connected);                    
+                    InvokeConnectedCallback(Connected);
                 }
             }
         }
@@ -111,7 +113,7 @@ namespace Nfw.Linux.Joystick.Generic {
                 
                 if (CallbackForAllEvents || oldValue != newValue) {
                     // Note, important to update the _buttons value *AFTER* the callback, so callback can compare against current state if useful
-                    ButtonCallback?.Invoke(this, key, newValue);
+                    InvokeButtonCallback(key, newValue);
                     _buttons[key] = newValue;
                 }
             } else if (message.IsAxis()) {
@@ -120,10 +122,25 @@ namespace Nfw.Linux.Joystick.Generic {
 
                 if (CallbackForAllEvents || oldValue != newValue) {
                     // Note, important to update the _buttons value *AFTER* the callback, so callback can compare against current state if useful
-                    AxisCallback?.Invoke(this, key, newValue);
+                    InvokeAxisCallback(key, newValue);
                     _axis[key] = newValue;
                 }
             }            
+        }
+
+        protected virtual void InvokeButtonCallback(byte key, bool value) {
+            if (!_cancellationTokenSource.Token.IsCancellationRequested) 
+                ButtonCallback?.Invoke(this, key, value);
+        }
+
+        protected virtual void InvokeAxisCallback(byte key, short value) {
+            if (!_cancellationTokenSource.Token.IsCancellationRequested)
+                AxisCallback?.Invoke(this, key, value);
+        }
+
+        protected virtual void InvokeConnectedCallback(bool value) {
+            if (!_cancellationTokenSource.Token.IsCancellationRequested) 
+                ConnectedCallback?.Invoke(this, value);
         }
 
         private bool DeviceFileExists { get { return File.Exists(_deviceFile); } }

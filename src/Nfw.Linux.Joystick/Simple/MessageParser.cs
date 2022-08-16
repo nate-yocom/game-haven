@@ -1,4 +1,4 @@
-namespace Nfw.Linux.Joystick.Generic {
+namespace Nfw.Linux.Joystick.Simple {
     internal static class MessageParser {
         
         [Flags]

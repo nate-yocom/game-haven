@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 using System.Diagnostics;
 
-using Nfw.Linux.Joystick.Generic;
+using Nfw.Linux.Joystick.Simple;
 
 namespace GameHaven.Controller {
 

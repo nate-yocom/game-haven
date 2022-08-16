@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using GameHaven.Renderer;
 using GameHaven.Diagnostics;
 
-using Nfw.Linux.Joystick.Generic;
+using Nfw.Linux.Joystick.Simple;
 
 namespace GameHaven.States {
 
