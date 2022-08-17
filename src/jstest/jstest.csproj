@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Nfw.Linux.Joystick\Nfw.Linux.Joystick.csproj" />
+    <PackageReference Include="Nfw.Linux.Joystick" Version="1.0.0" />
   </ItemGroup>
 
   <PropertyGroup>

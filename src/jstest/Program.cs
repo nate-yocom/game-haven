@@ -4,8 +4,8 @@ using Nfw.Linux.Joystick.Smart;
 XboxGamepad joystick = new XboxGamepad("/dev/input/js0", ButtonEventTypes.All);
 joystick.TreatAxisAsButtons = true;
 joystick.DefaultButtonSettings = new ButtonSettings() {
-    LongClickMinimumDurationMilliseconds = 500,
-    ShortClickMinimumDurationMilliseconds = 15
+    LongPressMinimumDurationMilliseconds = 500,
+    ShortPressMinimumDurationMilliseconds = 15
 };
 
 joystick.ButtonCallback = (j, b, e, v, d) => {

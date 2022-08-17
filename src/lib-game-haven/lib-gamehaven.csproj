@@ -13,9 +13,6 @@
     <PackageReference Include="SixLabors.Fonts" Version="1.0.0-beta17" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.2" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Nfw.Linux.Joystick\Nfw.Linux.Joystick.csproj" />
-  </ItemGroup>
+    <PackageReference Include="Nfw.Linux.Joystick" Version="1.0.0" />
+  </ItemGroup>  
 </Project>
