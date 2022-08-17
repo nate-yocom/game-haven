@@ -2,7 +2,8 @@ using Microsoft.Extensions.Logging;
 
 using GameHaven.Renderer;
 using GameHaven.Diagnostics;
-using GameHaven.Controller;
+
+using Nfw.Linux.Joystick.Simple;
 
 namespace GameHaven.States {
 
@@ -18,7 +19,7 @@ namespace GameHaven.States {
         private readonly ILogger _logger;
         private readonly string _settingsFilePath;
         private bool _disposed;
-        private List<GenericJoystick> _joysticks = new List<GenericJoystick>();
+        private List<Joystick> _joysticks = new List<Joystick>();
         
         public AsyncFrameBufferDisplay Display { get; private set; }
 
@@ -37,17 +38,21 @@ namespace GameHaven.States {
             // Test image from: https://commons.wikimedia.org/wiki/File:Test.svg
             Display.DisplayImage("data/test-image.png");
 
-            _joysticks.Add(new GenericJoystick("/dev/input/js0"));
-            _joysticks.Add(new GenericJoystick("/dev/input/js1"));
-            _joysticks.Add(new GenericJoystick("/dev/input/js2"));
+            _joysticks.Add(new Joystick("/dev/input/js0"));
+            _joysticks.Add(new Joystick("/dev/input/js1"));
+            _joysticks.Add(new Joystick("/dev/input/js2"));
 
-            foreach(GenericJoystick joystick in _joysticks) {
-                joystick.AxisChanged += (e, d) => {
-                    _logger.LogDebug($"{joystick.Identifier} [{joystick.Device}] => {e}: Axis[{d.Axis}, {d.Value}]");
+            foreach(Joystick joystick in _joysticks) {
+                joystick.AxisCallback = (j, e, d) => {
+                    _logger.LogDebug($"{j.DeviceName} => Axis[{e}, {d}]");
                 };
 
-                joystick.ButtonChanged += (e, d) => {
-                    _logger.LogDebug($"{joystick.Identifier} [{joystick.Device}] => {e}: Button[{d.Button}, {d.Pressed}]");
+                joystick.ButtonCallback = (j, e, d) => {
+                    _logger.LogDebug($"{j.DeviceName} => Button[{e}, {d}]");
+                };
+
+                joystick.ConnectedCallback = (j, c) => {
+                    _logger.LogDebug($"{j.DeviceName} => Connected: {c}");
                 };
             }
         }
@@ -56,7 +61,7 @@ namespace GameHaven.States {
         protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
                 if (disposing) {
-                    foreach(GenericJoystick joystick in _joysticks) {
+                    foreach(Joystick joystick in _joysticks) {
                         joystick.Dispose();
                     }
                 }

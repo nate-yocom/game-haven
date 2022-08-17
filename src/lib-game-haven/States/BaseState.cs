@@ -1,4 +1,5 @@
-using GameHaven.Controller;
+using Nfw.Linux.Joystick.Smart;
+using Nfw.Linux.Joystick.Xpad;
 
 namespace GameHaven.States {
 
@@ -12,7 +13,7 @@ namespace GameHaven.States {
         public abstract void Enter();
         public abstract void Exit();        
 
-        public void EventLoop(Xpad.Button button, ButtonEventTypes buttonEvent, double duration) {
+        public void EventLoop(Button button, ButtonEventTypes buttonEvent, double duration) {
             // common handling here, i.e. 'return to main menu button from engine, i.e.
             // if button == _engine.main manu button && duration >= _engine.mainmenubutton length {
             //      _engine.SetState(main menu)

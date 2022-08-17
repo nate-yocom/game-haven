@@ -1,12 +1,23 @@
-﻿using GameHaven.Controller;
+﻿using Nfw.Linux.Joystick.Xpad;
+using Nfw.Linux.Joystick.Smart;
 
-GenericJoystick joystick = new GenericJoystick("/dev/input/js0");
-joystick.AxisChanged += (e, d) => {
-    Console.WriteLine($"{joystick.Identifier} [{joystick.Device}] => {e}: Axis[{d.Axis}, {d.Value}]");
+XboxGamepad joystick = new XboxGamepad("/dev/input/js0", ButtonEventTypes.All);
+joystick.TreatAxisAsButtons = true;
+joystick.DefaultButtonSettings = new ButtonSettings() {
+    LongPressMinimumDurationMilliseconds = 500,
+    ShortPressMinimumDurationMilliseconds = 15
 };
 
-joystick.ButtonChanged += (e, d) => {
-    Console.WriteLine($"{joystick.Identifier} [{joystick.Device}] => {e}: Button[{d.Button}, {d.Pressed}]");
+joystick.ButtonCallback = (j, b, e, v, d) => {
+    Console.WriteLine($"{j.DeviceName} => Button[{b}, {e}] => {v} [dTime: {d}]");
+};
+
+joystick.AxisCallback = (j, a, v, d) => {
+    Console.WriteLine($"{j.DeviceName} => Axis[{a}] => {v} [dTime: {d}]");
+};
+
+joystick.ConnectedCallback = (j, c) => {
+    Console.WriteLine($"{j.DeviceName} => Connected[{c}]");
 };
 
 Console.Read();
