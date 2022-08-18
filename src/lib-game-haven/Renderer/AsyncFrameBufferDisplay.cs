@@ -11,22 +11,11 @@ using System.Runtime.InteropServices;
 
 using GameHaven.Diagnostics;
 
+using Nfw.Linux.FrameBuffer;
+
 namespace GameHaven.Renderer {
     public class AsyncFrameBufferDisplay : IDisposable {
         private ILogger _logger;
-
-        private readonly int _renderWidth = 800;
-        private readonly int _renderHeight = 480;
-        private readonly int _renderBpp = 16;  // RBG565
-        private readonly string _fbDevice = "/dev/fb0";
-
-        private int _displayWidth = 0;
-        private int _displayHeight = 0;
-        private int _displayBpp = 0;
-        private string _displayName = "<unknown>";
-
-        private MemoryMappedFile? _fbMmFile = null;
-        private MemoryMappedViewStream? _fbStream = null;
 
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private Task _renderLoopTask;
@@ -37,8 +26,17 @@ namespace GameHaven.Renderer {
         protected bool _disposed = false;
 
         private long _lastFrameTime = 0;
+        private RawFrameBuffer _fb;
 
         private const string DEFAULT_DISPLAY_DEVICE = "/dev/fb0";
+
+        public int RenderWidth { get; set; } = 800;
+        public int RenderHeight { get; set; } = 480;
+        public int RenderDepth { get; set; } = 16;  //  RBG565
+
+        public int DisplayWidth { get { return _fb.PixelWidth; } }
+        public int DisplayHeight { get { return _fb.PixelHeight; } }
+        public int DisplayDepth { get { return _fb.PixelDepth; } }
 
         // Enumerates /dev/fb* and returns a display for the highest numbered display
         //  on the presumption that that is the correct one... could be config'd later
@@ -58,20 +56,16 @@ namespace GameHaven.Renderer {
         public AsyncFrameBufferDisplay() : this(DEFAULT_DISPLAY_DEVICE) {
         }
 
-        public AsyncFrameBufferDisplay(string device) {
-            _fbDevice = device;
-            _logger = Logging.GetLogger($"AsyncFrameBufferDisplay({_fbDevice})");
+        public AsyncFrameBufferDisplay(string device) {            
+            _logger = Logging.GetLogger($"AsyncFrameBufferDisplay({device})");
 
-            // Should this go to an Initialize() so caller controls timing?
-            ProbeFramebuffer();
+            _fb = new RawFrameBuffer(device, _logger, true);
             _renderLoopTask = Task.Factory.StartNew(() => RenderLoop(), TaskCreationOptions.LongRunning);
         }
 
         public void Clear() {
             _logger.LogDebug("Clear()!");
-            using(Image<Bgr565> image = new Image<Bgr565>(_displayWidth, _displayHeight, new Bgr565(1,1,1))) {
-                DisplayImage(image);
-            }        
+            _fb.Clear();
         }
 
         public void DisplayImage(string filename) {
@@ -81,45 +75,25 @@ namespace GameHaven.Renderer {
             }            
         }
         
-        protected void RenderToDisplay(byte[] item)
-        {                
-            if (EnsureOpenStream()) {                
-                _fbStream?.Seek(0, SeekOrigin.Begin);
-                _logger.LogDebug($"Writing to FB - Stream pos: {_fbStream?.Position} Length: {_fbStream?.Length} Buffer Size: {item.Length}");
-                _fbStream?.Write(item, 0, (int)_fbStream.Length);
-                _fbStream?.Flush();                
-            }            
+        protected void RenderToDisplay(byte[] item) {                
+            _fb.WriteRaw(item);
         }       
 
         private void DisplayImage(Image<Bgr565> image) {
-            if (image.Width != _displayWidth || image.Height != _displayHeight) {
+            if (image.Width != _fb.PixelWidth || image.Height != _fb.PixelHeight) {
                 image.Mutate(x =>
                 {
-                    x.Resize(_displayWidth, _displayHeight);
+                    x.Resize(_fb.PixelWidth, _fb.PixelHeight);
                 });
             }
 
-            byte[] pixelBytes = new byte[image.Width * image.Height * (_renderBpp / 8)];
+            byte[] pixelBytes = new byte[image.Width * image.Height * (_fb.PixelDepth / 8)];
             image.CopyPixelDataTo(pixelBytes);
             lock(_mutex) {
                 // Last one in wins
                 _nextItem = pixelBytes;
             }            
-        }
-
-        private bool EnsureOpenStream() {
-            try {
-                if (_fbMmFile == null) {        
-                    _fbMmFile = MemoryMappedFile.CreateFromFile(_fbDevice, FileMode.Open, null, (_displayWidth * _displayHeight * (_displayBpp / 8)));
-                    _fbStream = _fbMmFile.CreateViewStream();
-                }
-
-                return true;
-            } catch(Exception ex) {
-                _logger.LogError($"Unable to ensure framebuffer stream: ${ex}");
-                return false;
-            }
-        }
+        }        
 
         private long LastFrameTime {
             get {
@@ -148,83 +122,7 @@ namespace GameHaven.Renderer {
                 Thread.Sleep(10);
             }
         }
-
-        // FB api from https://www.kernel.org/doc/Documentation/fb/api.txt
-        //  mapped for the bits we need, ignoring trailing parts (with byte[] only) for now
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct fb_fix_screeninfo {
-            // char[] 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)] 
-            public byte[] id;
-
-            // unsigned long 
-            [MarshalAs(UnmanagedType.U4)] 
-            public uint smem_start;
-
-            // __u32
-            [MarshalAs(UnmanagedType.U4)] 
-            public uint smem_len;
-
-            // __u32
-            [MarshalAs(UnmanagedType.U4)] 
-            public uint type;
-
-            // Remaing bits we dont care about
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 36)] 
-            public byte[] __remaining_bits;
-        };
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct fb_var_screeninfo {
-            public int xres;
-            public int yres;
-            public int xres_virtual;
-            public int yres_virtual;
-            public int xoffset;
-            public int yoffset;
-            public int bits_per_pixel;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 132)] 
-            public byte[] __remaining_bits;
-        };
-
-
-        [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
-        private static extern int ioctl(int handle, uint request, ref fb_var_screeninfo capability);
-
-        [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
-        private static extern int ioctl(int handle, uint request, ref fb_fix_screeninfo capability);
         
-        [DllImport("libc", EntryPoint = "__errno_location")]
-        private static extern System.IntPtr __errno_location();
-
-        private const int FBIOGET_FSCREENINFO = 0x4602;
-        private const int FBIOGET_VSCREENINFO = 0x4600;
-                
-        private void ProbeFramebuffer() {            
-            using(var fileHandle = File.OpenHandle(_fbDevice, FileMode.Open, FileAccess.ReadWrite, FileShare.None, FileOptions.None, 0)) {
-                fb_fix_screeninfo fixed_info = new fb_fix_screeninfo();
-                fb_var_screeninfo variable_info = new fb_var_screeninfo();
-
-                if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), FBIOGET_FSCREENINFO, ref fixed_info) < 0) {
-                    _logger.LogError($"ProbeFrameBuffer ioctl({FBIOGET_FSCREENINFO}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
-                } else {
-                    _displayName = System.Text.ASCIIEncoding.ASCII.GetString(fixed_info.id).TrimEnd(new char[] { '\r', '\n', ' ', '\0' });                    
-                    _logger.LogDebug($"Display memory for {_displayName} starts at: {fixed_info.smem_start} length: {fixed_info.smem_len}");
-                }
-
-                if(ioctl(fileHandle.DangerousGetHandle().ToInt32(), FBIOGET_VSCREENINFO, ref variable_info) < 0) {
-                    _logger.LogError($"ProbeFrameBuffer ioctl({FBIOGET_VSCREENINFO}) error: {System.Runtime.InteropServices.Marshal.ReadInt32(__errno_location())}");
-                } else {
-                    _logger.LogDebug($"Actual width => {variable_info.xres} height => {variable_info.yres} bpp => {variable_info.bits_per_pixel}");
-                    _displayBpp = variable_info.bits_per_pixel;
-                    _displayWidth = variable_info.xres;
-                    _displayHeight = variable_info.yres;
-                }       
-            }                     
-        }
-
         ~AsyncFrameBufferDisplay() {
             Dispose(false);
         }
@@ -239,16 +137,7 @@ namespace GameHaven.Renderer {
                 if (disposing) {
                     _cancellationTokenSource.Cancel();
                     _renderLoopTask.Wait();
-
-                    if (_fbStream != null) {
-                        _fbStream.Dispose();
-                        _fbStream = null;
-                    }
-
-                    if (_fbMmFile != null) {
-                        _fbMmFile.Dispose();
-                        _fbMmFile = null;
-                    }
+                    _fb.Dispose();
                 }
                 _disposed = true;
             }            
